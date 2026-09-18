@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Recognition - Login</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #141e30, #243b55);
+        }
+
+        .login-box {
+            width: 380px;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .login-box h1 {
+            color: #243b55;
+            margin-bottom: 10px;
+        }
+
+        .login-box p {
+            color: #777;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            margin-bottom: 18px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #243b55;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #243b55;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #141e30;
+        }
+
+        .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-box">
+
+        <h1>Emotion Recognition</h1>
+
+        <p>Login to access your dashboard</p>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+
+            <input
+                type="text"
+                name="username"
+                placeholder="Enter Username"
+                required
+            >
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Enter Password"
+                required
+            >
+
+            <button type="submit">Login</button>
+
+        </form>
+
+    </div>
+
+</body>
+</html>
