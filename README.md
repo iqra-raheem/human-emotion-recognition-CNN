@@ -130,7 +130,7 @@ The trained CNN model was evaluated on 7,178 test images.
 
 ### Test Accuracy
 
-54.21%
+54.81%
 
 ### Evaluation Metrics
 
