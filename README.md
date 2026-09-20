@@ -166,6 +166,6 @@ This project was developed for academic and educational purposes.
 
 ##  Author
 
-**Iqra Rahim**
+**iqra raheem**
 
 Human Emotion Recognition Using CNN
