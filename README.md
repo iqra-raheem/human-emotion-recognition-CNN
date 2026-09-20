@@ -1,5 +1,12 @@
 # Human Emotion Recognition Using CNN
-##  Project Overview
+
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.21-orange)
+![OpenCV](https://img.shields.io/badge/OpenCV-5.0-green)
+![Flask](https://img.shields.io/badge/Flask-3.1-lightgrey)
+![CNN](https://img.shields.io/badge/Model-CNN-red)
+
+## Project Overview
 
 Human Emotion Recognition Using CNN is an AI-based system that
 detects facial expressions and classifies them into seven emotion
