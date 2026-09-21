@@ -136,8 +136,7 @@ The system works through the following steps:
 The trained CNN model was evaluated on 7,178 test images.
 
 ### Test Accuracy
-
-54.81%
+54.21%
 
 ### Evaluation Metrics
 
