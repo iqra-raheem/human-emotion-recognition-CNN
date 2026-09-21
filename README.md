@@ -1,5 +1,6 @@
 # Human Emotion Recognition Using CNN
 
+
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.21-orange)
 ![OpenCV](https://img.shields.io/badge/OpenCV-5.0-green)
@@ -19,6 +20,9 @@ through a webcam and emotion prediction from uploaded images.
 A Flask-based web dashboard is used to display predictions,
 confidence scores, emotion history, graphs, and model evaluation
 results.
+## Project Screenshot
+
+![Human Emotion Recognition](a_wide_dark_themed_dashboard_ui_screenshot_for_a.png)
 ##  Objectives
 
 - Develop a CNN-based human emotion recognition system.
