@@ -17,6 +17,19 @@ A **Flask-based web dashboard** is used to provide an interactive interface for 
 ## Project Screenshot
 
 ![Human Emotion Recognition](a_wide_dark_themed_dashboard_ui_screenshot_for_a.png)
+## Training Performance
+
+### Training Accuracy
+
+The training accuracy graph shows the training and validation accuracy of the CNN model across the training epochs.
+
+![Training Accuracy](training_accuracy.png)
+
+### Training Loss
+
+The training loss graph shows the training and validation loss of the CNN model across the training epochs.
+
+![Training Loss](training_loss.png)
 
 ## Objectives
 
