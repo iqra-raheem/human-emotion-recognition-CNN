@@ -76,6 +76,7 @@ face_cascade = cv2.CascadeClassifier(
 
 camera = cv2.VideoCapture(0)
 
+
 # =========================================================
 # FILES
 # =========================================================
@@ -92,13 +93,6 @@ os.makedirs(
     UPLOAD_FOLDER,
     exist_ok=True
 )
-
-
-# =========================================================
-# PREDICTION HISTORY
-# =========================================================
-
-prediction_history = []
 
 
 # =========================================================
@@ -133,7 +127,7 @@ def save_emotion(
 
         writer.writerow([
             time.strftime(
-                time.strftime("%Y-%m-%d %I:%M:%S %p")
+                "%Y-%m-%d %I:%M:%S %p"
             ),
             emotion,
             round(
@@ -415,20 +409,10 @@ def get_classification_report():
                 row["Emotion"]
             ).strip()
 
-            # Convert to lowercase for checking
             emotion_lower = emotion.lower()
-
-            # -----------------------------------------
-            # Remove Accuracy row
-            # Accuracy is already shown separately
-            # -----------------------------------------
 
             if emotion_lower == "accuracy":
                 continue
-
-            # -----------------------------------------
-            # Get values
-            # -----------------------------------------
 
             precision = row.get(
                 "precision"
@@ -446,10 +430,6 @@ def get_classification_report():
                 "support"
             )
 
-            # -----------------------------------------
-            # Skip invalid rows
-            # -----------------------------------------
-
             if (
                 pd.isna(precision)
                 or pd.isna(recall)
@@ -457,10 +437,6 @@ def get_classification_report():
                 or pd.isna(support)
             ):
                 continue
-
-            # -----------------------------------------
-            # Add row
-            # -----------------------------------------
 
             report.append({
 
@@ -490,6 +466,8 @@ def get_classification_report():
         )
 
         return []
+
+
 # =========================================================
 # GET OVERALL TEST ACCURACY
 # =========================================================
@@ -508,13 +486,10 @@ def get_test_accuracy():
             index_col=0
         )
 
-        # Check if accuracy row exists
         if "accuracy" in data.index:
 
             row = data.loc["accuracy"]
 
-            # Accuracy may be stored in the
-            # precision column
             if (
                 "precision" in data.columns
                 and pd.notna(row["precision"])
@@ -524,7 +499,6 @@ def get_test_accuracy():
                     row["precision"]
                 ) * 100
 
-            # Alternative column
             if (
                 "accuracy" in data.columns
                 and pd.notna(row["accuracy"])
@@ -545,103 +519,304 @@ def get_test_accuracy():
 
         return None
 
+
+# =========================================================
+# TRAINING GRAPHS
+# =========================================================
+
+def create_training_graphs():
+
+    history_file = "training_history.json"
+
+    if not os.path.exists(
+        history_file
+    ):
+        return None, None
+
+    try:
+
+        with open(
+            history_file,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            history = pd.read_json(file)
+
+        # =================================================
+        # TRAINING ACCURACY
+        # =================================================
+
+        plt.figure(
+            figsize=(7, 3.2)
+        )
+
+        plt.plot(
+            history["accuracy"],
+            label="Training Accuracy"
+        )
+
+        if "val_accuracy" in history.columns:
+
+            plt.plot(
+                history["val_accuracy"],
+                label="Validation Accuracy"
+            )
+
+        plt.title(
+            "Training Accuracy"
+        )
+
+        plt.xlabel(
+            "Epoch"
+        )
+
+        plt.ylabel(
+            "Accuracy"
+        )
+
+        plt.legend()
+
+        plt.grid(
+            alpha=0.2
+        )
+
+        plt.tight_layout()
+
+        accuracy_image = io.BytesIO()
+
+        plt.savefig(
+            accuracy_image,
+            format="png",
+            dpi=100
+        )
+
+        plt.close()
+
+        accuracy_image.seek(0)
+
+        accuracy_graph = base64.b64encode(
+            accuracy_image.getvalue()
+        ).decode("utf-8")
+
+
+        # =================================================
+        # TRAINING LOSS
+        # =================================================
+
+        plt.figure(
+            figsize=(7, 3.2)
+        )
+
+        plt.plot(
+            history["loss"],
+            label="Training Loss"
+        )
+
+        if "val_loss" in history.columns:
+
+            plt.plot(
+                history["val_loss"],
+                label="Validation Loss"
+            )
+
+        plt.title(
+            "Training Loss"
+        )
+
+        plt.xlabel(
+            "Epoch"
+        )
+
+        plt.ylabel(
+            "Loss"
+        )
+
+        plt.legend()
+
+        plt.grid(
+            alpha=0.2
+        )
+
+        plt.tight_layout()
+
+        loss_image = io.BytesIO()
+
+        plt.savefig(
+            loss_image,
+            format="png",
+            dpi=100
+        )
+
+        plt.close()
+
+        loss_image.seek(0)
+
+        loss_graph = base64.b64encode(
+            loss_image.getvalue()
+        ).decode("utf-8")
+
+        return (
+            accuracy_graph,
+            loss_graph
+        )
+
+    except Exception as e:
+
+        print(
+            "Training Graph Error:",
+            e
+        )
+
+        return None, None
+
+
+# =========================================================
+# GENERATE WEBCAM FRAMES
+# =========================================================
+
 def generate_frames():
-    # Har detected face ki separate prediction history
+
     face_histories = []
 
-    # Har face ki last save timing
     last_save_times = []
 
     while True:
 
-        # Camera se frame read karo
         success, frame = camera.read()
 
-        # Agar camera frame na de to stream stop
         if not success:
             break
 
-        # Frame ko grayscale mein convert karo
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(
+            frame,
+            cv2.COLOR_BGR2GRAY
+        )
 
-        # Faces detect karo
         try:
+
             faces = face_cascade.detectMultiScale(
                 gray,
                 scaleFactor=1.3,
                 minNeighbors=5
             )
+
         except cv2.error:
+
             continue
 
-        # Faces ko left-to-right order mein arrange karo
-        faces = sorted(faces, key=lambda face: face[0])
+        faces = sorted(
+            faces,
+            key=lambda face: face[0]
+        )
 
-        # Agar faces ki quantity change ho jaye
-        # to old histories reset kar do
-        if len(faces) != len(face_histories):
-            face_histories = [[] for _ in faces]
-            last_save_times = [0 for _ in faces]
+        if len(faces) != len(
+            face_histories
+        ):
 
-        # Har face ko separately process karo
-        for face_number, (x, y, w, h) in enumerate(faces):
+            face_histories = [
+                []
+                for _ in faces
+            ]
 
-            # Face crop karo
-            face = gray[y:y+h, x:x+w]
+            last_save_times = [
+                0
+                for _ in faces
+            ]
 
-            # Face ko CNN ke required 48x48 size mein resize karo
-            face = cv2.resize(face, (48, 48))
+        for face_number, (
+            x,
+            y,
+            w,
+            h
+        ) in enumerate(faces):
 
-            # Pixel values 0-255 se 0-1 mein convert karo
-            face = face.astype("float32") / 255.0
+            face = gray[
+                y:y+h,
+                x:x+w
+            ]
 
-            # CNN input shape:
-            # (1, 48, 48, 1)
-            face = np.expand_dims(face, axis=0)
-            face = np.expand_dims(face, axis=-1)
+            face = cv2.resize(
+                face,
+                (48, 48)
+            )
 
-            # CNN prediction
+            face = face.astype(
+                "float32"
+            ) / 255.0
+
+            face = np.expand_dims(
+                face,
+                axis=0
+            )
+
+            face = np.expand_dims(
+                face,
+                axis=-1
+            )
+
             prediction = model.predict(
                 face,
                 verbose=0
             )[0]
 
-            # Is face ki apni history mein prediction add karo
-            face_histories[face_number].append(prediction)
+            face_histories[
+                face_number
+            ].append(
+                prediction
+            )
 
-            # Sirf last 5 predictions rakho
-            if len(face_histories[face_number]) > 5:
-                face_histories[face_number].pop(0)
+            if len(
+                face_histories[
+                    face_number
+                ]
+            ) > 5:
 
-            # Is face ki predictions ka average
+                face_histories[
+                    face_number
+                ].pop(0)
+
             average_prediction = np.mean(
-                face_histories[face_number],
+                face_histories[
+                    face_number
+                ],
                 axis=0
             )
 
-            # Highest probability wali emotion
-            emotion_index = np.argmax(average_prediction)
+            emotion_index = np.argmax(
+                average_prediction
+            )
 
-            # Emotion ka naam
-            emotion = emotions[emotion_index]
+            emotion = emotions[
+                emotion_index
+            ]
 
-            # Confidence percentage
-            confidence = average_prediction[emotion_index] * 100
+            confidence = (
+                average_prediction[
+                    emotion_index
+                ] * 100
+            )
 
-            # Current time
             current_time = time.time()
 
-            # Har face ki emotion 2 seconds baad history mein save karo
-            if current_time - last_save_times[face_number] >= 2:
+            if (
+                current_time
+                -
+                last_save_times[
+                    face_number
+                ]
+                >= 2
+            ):
 
                 save_emotion(
                     emotion,
                     confidence
                 )
 
-                last_save_times[face_number] = current_time
+                last_save_times[
+                    face_number
+                ] = current_time
 
-            # Face ke around rectangle draw karo
             cv2.rectangle(
                 frame,
                 (x, y),
@@ -650,13 +825,15 @@ def generate_frames():
                 2
             )
 
-            # Person number
-            person_text = f"Person {face_number + 1}"
+            person_text = (
+                f"Person {face_number + 1}"
+            )
 
-            # Emotion + confidence text
-            emotion_text = f"{emotion.upper()} ({confidence:.1f}%)"
+            emotion_text = (
+                f"{emotion.upper()} "
+                f"({confidence:.1f}%)"
+            )
 
-            # Person number face ke upar show karo
             cv2.putText(
                 frame,
                 person_text,
@@ -667,7 +844,6 @@ def generate_frames():
                 2
             )
 
-            # Emotion face ke upar show karo
             cv2.putText(
                 frame,
                 emotion_text,
@@ -678,20 +854,16 @@ def generate_frames():
                 2
             )
 
-        # Frame ko JPEG mein convert karo
         ret, buffer = cv2.imencode(
             ".jpg",
             frame
         )
 
-        # Agar JPEG conversion fail ho
         if not ret:
             continue
 
-        # Frame bytes mein convert karo
         frame_bytes = buffer.tobytes()
 
-        # Browser ko frame send karo
         yield (
             b"--frame\r\n"
             b"Content-Type: image/jpeg\r\n\r\n"
@@ -712,7 +884,9 @@ DASHBOARD_HTML = """
 
 <head>
 
-    <title>Human Emotion Recognition</title>
+    <title>
+        Human Emotion Recognition
+    </title>
 
     <meta
         name="viewport"
@@ -724,6 +898,7 @@ DASHBOARD_HTML = """
         * {
             box-sizing: border-box;
         }
+
 
         body {
 
@@ -820,8 +995,7 @@ DASHBOARD_HTML = """
 
             grid-template-columns:
                 1fr
-                0.9fr
-                1.25fr;
+                0.9fr;
 
             gap: 15px;
 
@@ -1045,13 +1219,13 @@ DASHBOARD_HTML = """
         }
 
 
-        /* ================= MODEL ACCURACY ================= */
+        /* ================= ACCURACY ================= */
 
         .accuracy-card {
 
-            margin-top: 15px;
-
             text-align: center;
+
+            height: 100%;
         }
 
 
@@ -1061,7 +1235,7 @@ DASHBOARD_HTML = """
 
             font-weight: bold;
 
-            margin-top: 10px;
+            margin-top: 25px;
 
             margin-bottom: 5px;
         }
@@ -1395,17 +1569,26 @@ DASHBOARD_HTML = """
         </div>
 
 
-        <!-- ================= GRAPH ================= -->
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- TRAINING GRAPHS -->
+    <!-- ================================================= -->
+
+    <div class="results-section">
+
+
+        <!-- ================= TRAINING ACCURACY ================= -->
 
         <div class="card">
 
-            <h2>📊 Emotion Analysis</h2>
+            <h2>📈 Training Accuracy</h2>
 
-
-            {% if graph %}
+            {% if training_accuracy_graph %}
 
                 <img
-                    src="data:image/png;base64,{{ graph }}"
+                    src="data:image/png;base64,{{ training_accuracy_graph }}"
                     class="graph"
                 >
 
@@ -1413,8 +1596,35 @@ DASHBOARD_HTML = """
 
                 <div class="no-graph">
 
-                    No emotion history
-                    available yet.
+                    Training accuracy graph
+                    not available.
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- ================= TRAINING LOSS ================= -->
+
+        <div class="card">
+
+            <h2>📉 Training Loss</h2>
+
+            {% if training_loss_graph %}
+
+                <img
+                    src="data:image/png;base64,{{ training_loss_graph }}"
+                    class="graph"
+                >
+
+            {% else %}
+
+                <div class="no-graph">
+
+                    Training loss graph
+                    not available.
 
                 </div>
 
@@ -1426,7 +1636,9 @@ DASHBOARD_HTML = """
     </div>
 
 
-    <!-- ================= HISTORY ================= -->
+    <!-- ================================================= -->
+    <!-- HISTORY -->
+    <!-- ================================================= -->
 
     <div class="card history-card">
 
@@ -1489,45 +1701,81 @@ DASHBOARD_HTML = """
 
 
     <!-- ================================================= -->
-    <!-- MODEL EVALUATION -->
+    <!-- EMOTION ANALYSIS + TEST ACCURACY -->
     <!-- ================================================= -->
 
-    <div class="card accuracy-card">
-
-        <h2>🎯 Model Evaluation</h2>
+    <div class="results-section">
 
 
-        {% if test_accuracy is not none %}
+        <!-- ================= EMOTION ANALYSIS ================= -->
 
-            <div class="accuracy-number">
+        <div class="card">
 
-                {{ "%.2f"|format(test_accuracy) }}%
+            <h2>📊 Emotion Analysis</h2>
 
-            </div>
 
-            <div class="accuracy-title">
+            {% if graph %}
 
-                Overall Test Accuracy
+                <img
+                    src="data:image/png;base64,{{ graph }}"
+                    class="graph"
+                >
 
-            </div>
+            {% else %}
 
-            <div class="accuracy-info">
+                <div class="no-graph">
 
-                Evaluated on 7,178 test images
+                    No emotion history
+                    available yet.
 
-            </div>
+                </div>
 
-        {% else %}
+            {% endif %}
 
-            <p
-                style="color:#94a3b8;"
-            >
+        </div>
 
-                Test accuracy is not available.
 
-            </p>
+        <!-- ================= TEST ACCURACY ================= -->
 
-        {% endif %}
+        <div class="card accuracy-card">
+
+            <h2>🎯 Model Evaluation</h2>
+
+
+            {% if test_accuracy is not none %}
+
+                <div class="accuracy-number">
+
+                    {{ "%.2f"|format(test_accuracy) }}%
+
+                </div>
+
+                <div class="accuracy-title">
+
+                    Overall Test Accuracy
+
+                </div>
+
+                <div class="accuracy-info">
+
+                    Evaluated on 7,178 test images
+
+                </div>
+
+            {% else %}
+
+                <p
+                    style="color:#94a3b8;"
+                >
+
+                    Test accuracy is not available.
+
+                </p>
+
+            {% endif %}
+
+        </div>
+
 
     </div>
 
@@ -1941,11 +2189,21 @@ def dashboard():
             url_for("login")
         )
 
+    accuracy_graph, loss_graph = (
+        create_training_graphs()
+    )
+
     return render_template_string(
 
         DASHBOARD_HTML,
 
         graph=create_graph(),
+
+        training_accuracy_graph=
+            accuracy_graph,
+
+        training_loss_graph=
+            loss_graph,
 
         history=get_history(),
 
@@ -1972,81 +2230,220 @@ def dashboard():
 # =========================================================
 # IMAGE UPLOAD + CNN PREDICTION
 # =========================================================
-# =========================================================
-# IMAGE UPLOAD + CNN PREDICTION
-# =========================================================
 
-@app.route("/predict_image", methods=["POST"])
+@app.route(
+    "/predict_image",
+    methods=["POST"]
+)
 def predict_image():
 
-    if not session.get("logged_in"):
-        return redirect(url_for("login"))
+    if not session.get(
+        "logged_in"
+    ):
 
-    file = request.files.get("image")
-
-    # Check file
-    if not file or file.filename == "":
-        return render_template_string(
-            DASHBOARD_HTML,
-            graph=create_graph(),
-            history=get_history(),
-            confusion_matrix=get_confusion_matrix(),
-            classification_report=get_classification_report(),
-            test_accuracy=get_test_accuracy(),
-            upload_result=None,
-            upload_emotion=None,
-            upload_confidence=None,
-            upload_error="Please select an image."
+        return redirect(
+            url_for("login")
         )
 
-    # Save uploaded image
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-    file.save(filepath)
+    file = request.files.get(
+        "image"
+    )
 
-    # Read image
-    image = cv2.imread(filepath)
+    # Create training graphs
+    accuracy_graph, loss_graph = (
+        create_training_graphs()
+    )
+
+    # =====================================================
+    # CHECK FILE
+    # =====================================================
+
+    if not file or file.filename == "":
+
+        return render_template_string(
+
+            DASHBOARD_HTML,
+
+            graph=create_graph(),
+
+            training_accuracy_graph=
+                accuracy_graph,
+
+            training_loss_graph=
+                loss_graph,
+
+            history=get_history(),
+
+            confusion_matrix=
+                get_confusion_matrix(),
+
+            classification_report=
+                get_classification_report(),
+
+            test_accuracy=
+                get_test_accuracy(),
+
+            upload_result=None,
+
+            upload_emotion=None,
+
+            upload_confidence=None,
+
+            upload_error=
+                "Please select an image."
+
+        )
+
+
+    # =====================================================
+    # SAVE UPLOADED IMAGE
+    # =====================================================
+
+    filename = secure_filename(
+        file.filename
+    )
+
+    filepath = os.path.join(
+        UPLOAD_FOLDER,
+        filename
+    )
+
+    file.save(
+        filepath
+    )
+
+
+    # =====================================================
+    # READ IMAGE
+    # =====================================================
+
+    image = cv2.imread(
+        filepath
+    )
 
     if image is None:
+
         return render_template_string(
+
             DASHBOARD_HTML,
+
             graph=create_graph(),
+
+            training_accuracy_graph=
+                accuracy_graph,
+
+            training_loss_graph=
+                loss_graph,
+
             history=get_history(),
-            confusion_matrix=get_confusion_matrix(),
-            classification_report=get_classification_report(),
-            test_accuracy=get_test_accuracy(),
+
+            confusion_matrix=
+                get_confusion_matrix(),
+
+            classification_report=
+                get_classification_report(),
+
+            test_accuracy=
+                get_test_accuracy(),
+
             upload_result=None,
+
             upload_emotion=None,
+
             upload_confidence=None,
-            upload_error="Invalid image file."
+
+            upload_error=
+                "Invalid image file."
+
         )
 
-    # Convert to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    # Resize complete image for CNN
-    face = cv2.resize(gray, (48, 48))
+    # =====================================================
+    # CONVERT TO GRAYSCALE
+    # =====================================================
 
-    # Normalize
-    face = face.astype("float32") / 255.0
+    gray = cv2.cvtColor(
+        image,
+        cv2.COLOR_BGR2GRAY
+    )
 
-    # Prepare CNN input
-    face = np.expand_dims(face, axis=0)
-    face = np.expand_dims(face, axis=-1)
 
-    # CNN prediction
-    prediction = model.predict(face, verbose=0)[0]
+    # =====================================================
+    # RESIZE FOR CNN
+    # =====================================================
 
-    emotion_index = np.argmax(prediction)
-    emotion = emotions[emotion_index]
+    face = cv2.resize(
+        gray,
+        (48, 48)
+    )
 
-    confidence = prediction[emotion_index] * 100
 
-    # Save history
-    save_emotion(emotion, confidence)
+    # =====================================================
+    # NORMALIZE
+    # =====================================================
 
-    # Show result on uploaded image
-    text = f"{emotion.upper()} ({confidence:.1f}%)"
+    face = face.astype(
+        "float32"
+    ) / 255.0
+
+
+    # =====================================================
+    # PREPARE CNN INPUT
+    # =====================================================
+
+    face = np.expand_dims(
+        face,
+        axis=0
+    )
+
+    face = np.expand_dims(
+        face,
+        axis=-1
+    )
+
+
+    # =====================================================
+    # CNN PREDICTION
+    # =====================================================
+
+    prediction = model.predict(
+        face,
+        verbose=0
+    )[0]
+
+    emotion_index = np.argmax(
+        prediction
+    )
+
+    emotion = emotions[
+        emotion_index
+    ]
+
+    confidence = (
+        prediction[
+            emotion_index
+        ] * 100
+    )
+
+
+    # =====================================================
+    # SAVE HISTORY
+    # =====================================================
+
+    save_emotion(
+        emotion,
+        confidence
+    )
+
+
+    # =====================================================
+    # SHOW RESULT ON IMAGE
+    # =====================================================
+
+    text = (
+        f"{emotion.upper()} "
+        f"({confidence:.1f}%)"
+    )
 
     cv2.putText(
         image,
@@ -2058,39 +2455,98 @@ def predict_image():
         2
     )
 
-    # Encode image
-    success, encoded_image = cv2.imencode(".jpg", image)
+
+    # =====================================================
+    # ENCODE IMAGE
+    # =====================================================
+
+    success, encoded_image = cv2.imencode(
+        ".jpg",
+        image
+    )
 
     if not success:
+
         return render_template_string(
+
             DASHBOARD_HTML,
+
             graph=create_graph(),
+
+            training_accuracy_graph=
+                accuracy_graph,
+
+            training_loss_graph=
+                loss_graph,
+
             history=get_history(),
-            confusion_matrix=get_confusion_matrix(),
-            classification_report=get_classification_report(),
-            test_accuracy=get_test_accuracy(),
+
+            confusion_matrix=
+                get_confusion_matrix(),
+
+            classification_report=
+                get_classification_report(),
+
+            test_accuracy=
+                get_test_accuracy(),
+
             upload_result=None,
+
             upload_emotion=None,
+
             upload_confidence=None,
-            upload_error="Could not process image."
+
+            upload_error=
+                "Could not process image."
+
         )
+
 
     upload_result = base64.b64encode(
         encoded_image.tobytes()
-    ).decode("utf-8")
+    ).decode(
+        "utf-8"
+    )
 
-    # Show result
+
+    # =====================================================
+    # SHOW RESULT
+    # =====================================================
+
     return render_template_string(
+
         DASHBOARD_HTML,
+
         graph=create_graph(),
+
+        training_accuracy_graph=
+            accuracy_graph,
+
+        training_loss_graph=
+            loss_graph,
+
         history=get_history(),
-        confusion_matrix=get_confusion_matrix(),
-        classification_report=get_classification_report(),
-        test_accuracy=get_test_accuracy(),
-        upload_result=upload_result,
-        upload_emotion=emotion,
-        upload_confidence=confidence,
+
+        confusion_matrix=
+            get_confusion_matrix(),
+
+        classification_report=
+            get_classification_report(),
+
+        test_accuracy=
+            get_test_accuracy(),
+
+        upload_result=
+            upload_result,
+
+        upload_emotion=
+            emotion,
+
+        upload_confidence=
+            confidence,
+
         upload_error=None
+
     )
 
 
@@ -2110,7 +2566,6 @@ def video_feed():
         return redirect(
             url_for("login")
         )
-
 
     return Response(
 
@@ -2144,9 +2599,9 @@ def logout():
 
 if __name__ == "__main__":
 
- app.run(
-    host="127.0.0.1",
-    port=5000,
-    debug=True,
-    threaded=True
-)
+    app.run(
+        host="127.0.0.1",
+        port=5000,
+        debug=True,
+        threaded=True
+    )

@@ -233,3 +233,48 @@ model.save("emotion_model.keras")
 
 print("\nModel saved successfully!")
 print("File: emotion_model.keras")
+
+# =========================
+# 14. Save Training History
+# =========================
+
+import json
+
+with open("training_history.json", "w") as f:
+    json.dump(history.history, f)
+
+print("Training history saved successfully!")
+
+
+# =========================
+# 15. Training Accuracy & Loss Graphs
+# =========================
+
+import matplotlib.pyplot as plt
+
+# Accuracy Graph
+plt.figure(figsize=(8, 5))
+plt.plot(history.history["accuracy"], label="Training Accuracy")
+plt.plot(history.history["val_accuracy"], label="Validation Accuracy")
+plt.title("Training and Validation Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.legend()
+plt.grid(True)
+plt.savefig("training_accuracy.png")
+plt.show()
+
+# Loss Graph
+plt.figure(figsize=(8, 5))
+plt.plot(history.history["loss"], label="Training Loss")
+plt.plot(history.history["val_loss"], label="Validation Loss")
+plt.title("Training and Validation Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.legend()
+plt.grid(True)
+plt.savefig("training_loss.png")
+plt.show()
+
+print("\nTraining graphs saved successfully!")
+print("Files: training_accuracy.png, training_loss.png")
