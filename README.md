@@ -1,5 +1,13 @@
 # Human Emotion Recognition Using CNN
-##  Project Overview
+
+
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.21-orange)
+![OpenCV](https://img.shields.io/badge/OpenCV-5.0-green)
+![Flask](https://img.shields.io/badge/Flask-3.1-lightgrey)
+![CNN](https://img.shields.io/badge/Model-CNN-red)
+
+## Project Overview
 
 Human Emotion Recognition Using CNN is an AI-based system that
 detects facial expressions and classifies them into seven emotion
@@ -12,6 +20,9 @@ through a webcam and emotion prediction from uploaded images.
 A Flask-based web dashboard is used to display predictions,
 confidence scores, emotion history, graphs, and model evaluation
 results.
+## Project Screenshot
+
+![Human Emotion Recognition](a_wide_dark_themed_dashboard_ui_screenshot_for_a.png)
 ##  Objectives
 
 - Develop a CNN-based human emotion recognition system.
@@ -129,7 +140,6 @@ The system works through the following steps:
 The trained CNN model was evaluated on 7,178 test images.
 
 ### Test Accuracy
-
 54.21%
 
 ### Evaluation Metrics
@@ -166,6 +176,6 @@ This project was developed for academic and educational purposes.
 
 ##  Author
 
-**Iqra Rahim**
+**iqra raheem**
 
 Human Emotion Recognition Using CNN
